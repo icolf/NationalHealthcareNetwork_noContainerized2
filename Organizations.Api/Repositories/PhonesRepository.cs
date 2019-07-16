@@ -25,7 +25,7 @@ namespace Organizations.Api.Repositories
 
         public bool IsPhoneExists(Guid organizationId, Guid phoneId)
         {
-            return _context.Addresses.Any(a => a.OrganizationId == organizationId && a.AddressId == phoneId);
+            return _context.Phones.Any(a => a.OrganizationId == organizationId && a.PhoneId == phoneId);
         }
 
         public IEnumerable<PhoneDto> GetPhonesForOrganization(Guid organizationId)
@@ -33,7 +33,7 @@ namespace Organizations.Api.Repositories
             var organization = _context.Organizations.Include(o => o.Phones)
                 .FirstOrDefault(o => o.OrganizationId == organizationId);
 
-            return _mapper.Map<IEnumerable<PhoneDto>>(organization.Addresses);
+            return _mapper.Map<IEnumerable<PhoneDto>>(organization.Phones);
         }
 
         public Phone GetPhone(Guid organizationId, Guid phoneId)

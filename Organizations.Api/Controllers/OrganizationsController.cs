@@ -18,21 +18,19 @@ namespace Organizations.Api.Controllers
     [Route("api/organizations")]
     public class OrganizationsController : ControllerBase
     {
-        private readonly OrganizationsContext _context;
-        private IOrganizationsRepository _organizationsRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public OrganizationsController (OrganizationsContext context, IOrganizationsRepository organizationsRepository, IMapper mapper)
+        public OrganizationsController (IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _context = context;
-            _organizationsRepository = organizationsRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
         [HttpGet()]
         public IActionResult GetOrganizations()
         {
-            var organizations = _organizationsRepository.GetOrganizations();
+            var organizations = _unitOfWork.Organizations.GetOrganizations();
 
             return Ok(organizations);
         }
@@ -40,7 +38,7 @@ namespace Organizations.Api.Controllers
         [HttpGet("{orgOnly}")]
         public IActionResult GetOrganizationsOnly(bool orgOnly)
         {
-            var organizations = _organizationsRepository.GetOrganizationsOnly();
+            var organizations = _unitOfWork.Organizations.GetOrganizationsOnly();
             return Ok(organizations);
         }
 
@@ -48,7 +46,7 @@ namespace Organizations.Api.Controllers
         public IActionResult GetOrganization(Guid? organizationId, bool includeChildren=false)
         {
 
-            var organization =_organizationsRepository.GetOrganization(organizationId, includeChildren);
+            var organization =_unitOfWork.Organizations.GetOrganization(organizationId, includeChildren);
 
             if (organization == null)
             {
@@ -79,7 +77,7 @@ namespace Organizations.Api.Controllers
             }
 
 
-            var organizationToAdd = _organizationsRepository.CreateOrganization(organizationDto);
+            var organizationToAdd = _unitOfWork.Organizations.CreateOrganization(organizationDto);
 
             return CreatedAtRoute("GetOrganization", new {organizationId = organizationToAdd.OrganizationId},
                 organizationToAdd);
@@ -104,12 +102,12 @@ namespace Organizations.Api.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (!_organizationsRepository.IsOrganizationExists(organizationId))
+            if (!_unitOfWork.Organizations.IsOrganizationExists(organizationId))
             {
                 return NotFound();
             }
 
-            _organizationsRepository.UpdateOrganization(organization, organizationId);
+            _unitOfWork.Organizations.UpdateOrganization(organization, organizationId);
 
             return NoContent();
 
@@ -123,14 +121,14 @@ namespace Organizations.Api.Controllers
                 return BadRequest();
             }
 
-            var organizationToDelete = _context.Organizations.FirstOrDefault(o => o.OrganizationId == organizationId);
+            var organizationToDelete = _unitOfWork.Organizations.GetOrganization(organizationId, false);
 
             if (organizationToDelete == null)
             {
                 return NotFound();
             }
 
-            _organizationsRepository.DeleteOrganization(organizationToDelete);
+            _unitOfWork.Organizations.DeleteOrganization(organizationToDelete);
 
             return NoContent();
         }
@@ -144,7 +142,7 @@ namespace Organizations.Api.Controllers
                 return BadRequest();
             }
 
-            var organizationToUpdate = _context.Organizations.FirstOrDefault(o => o.OrganizationId == organizationId);
+            var organizationToUpdate = _unitOfWork.Organizations.GetOrganization(organizationId, false);
 
             if (organizationToUpdate == null)
             {
@@ -169,9 +167,10 @@ namespace Organizations.Api.Controllers
 
             _mapper.Map(organizationToPatch, organizationToUpdate);
 
-            _context.Attach(organizationToUpdate);
-
-            _context.SaveChanges();
+            if (!_unitOfWork.Complete())
+            {
+                return StatusCode(500, "A problem happened while handling your request!");
+            }
             return NoContent();
 
 

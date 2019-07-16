@@ -20,26 +20,24 @@ namespace Organizations.Api.Controllers
     [Route("api/organizations")]
     public class AddressesController : ControllerBase
     {
-        private readonly OrganizationsContext _context;
-        private readonly IAddressesRepository _addressesRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public AddressesController(OrganizationsContext context, IAddressesRepository addressesRepository, IMapper mapper)
+        public AddressesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _context = context;
-            _addressesRepository = addressesRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
         [HttpGet("{organizationId}/addresses")]
         public IActionResult GetAddresses(Guid organizationId)
         {
-            if (!_addressesRepository.IsOrganizationExists(organizationId))
+            if (!_unitOfWork.Addresses.IsOrganizationExists(organizationId))
             {
                 return NotFound();
             }
 
-            var addressesToReturn = _addressesRepository.GetAddressesForOrganization(organizationId);
+            var addressesToReturn = _unitOfWork.Addresses.GetAddressesForOrganization(organizationId);
 
             return Ok(addressesToReturn);
         }
@@ -52,17 +50,17 @@ namespace Organizations.Api.Controllers
                 return BadRequest();
             }
 
-            if (!_addressesRepository.IsOrganizationExists(organizationId))
+            if (!_unitOfWork.Addresses.IsOrganizationExists(organizationId))
             {
                 return NotFound();
             }
 
-            if (!_addressesRepository.IsAddressExists(organizationId, addressId))
+            if (!_unitOfWork.Addresses.IsAddressExists(organizationId, addressId))
             {
                 return NotFound();
             }
 
-            var addressToReturn = _addressesRepository.GetAddress(organizationId, addressId);
+            var addressToReturn = _unitOfWork.Addresses.GetAddress(organizationId, addressId);
 
             _mapper.Map<AddressDto>(addressToReturn);
 
@@ -82,14 +80,14 @@ namespace Organizations.Api.Controllers
                 return BadRequest();
             }
 
-            if (!_addressesRepository.IsOrganizationExists(organizationId))
+            if (!_unitOfWork.Addresses.IsOrganizationExists(organizationId))
             {
                 return NotFound();
             }
 
-            var mappedAddress= _addressesRepository.CreateAddress(organizationId, address);
+            var mappedAddress= _unitOfWork.Addresses.CreateAddress(organizationId, address);
 
-            if (!_addressesRepository.Save())
+            if (!_unitOfWork.Complete())
             {
                 return StatusCode(500, "A problem happened while handling your request!");
             }
@@ -111,20 +109,21 @@ namespace Organizations.Api.Controllers
                 return BadRequest();
             }
 
-            if (!_addressesRepository.IsOrganizationExists(organizationId))
+            if (!_unitOfWork.Addresses.IsOrganizationExists(organizationId))
             {
                 return NotFound();
             }
 
-            var addressFromContext = _context.Addresses.FirstOrDefault(a => a.AddressId == addressId);
-            if (addressFromContext == null)
+            if (!_unitOfWork.Addresses.IsAddressExists(organizationId, addressId))
             {
                 return NotFound();
             }
+
+            var addressFromContext = _unitOfWork.Addresses.GetAddress(organizationId, addressId);
 
             _mapper.Map(addressForUpdate,addressFromContext);
 
-            if (!_addressesRepository.Save())
+            if (!_unitOfWork.Complete())
             {
                 return StatusCode(500, "A problem happened while handling your request!");
             }
@@ -145,70 +144,70 @@ namespace Organizations.Api.Controllers
                 return BadRequest();
             }
 
-            if (!_addressesRepository.IsOrganizationExists(organizationId))
+            if (!_unitOfWork.Addresses.IsOrganizationExists(organizationId))
             {
                 return NotFound();
             }
 
-            if (!_addressesRepository.IsAddressExists(organizationId, addressId))
+            if (!_unitOfWork.Addresses.IsAddressExists(organizationId, addressId))
             {
                 return NotFound();
             }
 
-            _addressesRepository.DeleteAddress(organizationId, addressId);
+            _unitOfWork.Addresses.DeleteAddress(organizationId, addressId);
 
-            if (!_addressesRepository.Save())
-            {
-                return StatusCode(500, "A problem happened while handling your request!");
-            }
-
-            return Ok();
-        }
-
-        [HttpPatch("{organizationId}/addresses/{addressId}")]
-        public IActionResult UpdateAddress(Guid organizationId, Guid addressId,
-            [FromBody] JsonPatchDocument<AddressForUpdateDto> jsonPatchDocument)
-        {
-            if (organizationId == new Guid())
-            {
-                return BadRequest();
-            }
-
-            if (addressId == new Guid())
-            {
-                return BadRequest();
-            }
-
-            if (!_addressesRepository.IsOrganizationExists(organizationId))
-            {
-                return NotFound();
-            }
-
-            if (!_addressesRepository.IsAddressExists(organizationId, addressId))
-            {
-                return NotFound();
-            }
-
-            var addressFromContext = _addressesRepository.GetAddress(organizationId, addressId);
-
-            var addressToPatch = _mapper.Map<AddressForUpdateDto>(addressFromContext);
-            jsonPatchDocument.ApplyTo(addressToPatch, ModelState);
-
-            TryValidateModel(addressToPatch);
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            _mapper.Map(addressToPatch, addressFromContext);
-
-            if (!_addressesRepository.Save())
+            if (!_unitOfWork.Complete())
             {
                 return StatusCode(500, "A problem happened while handling your request!");
             }
 
             return NoContent();
         }
+
+        [HttpPatch("{organizationId}/addresses/{addressId}")]
+            public IActionResult UpdateAddress(Guid organizationId, Guid addressId,
+                [FromBody] JsonPatchDocument<AddressForUpdateDto> jsonPatchDocument)
+            {
+                if (organizationId == new Guid())
+                {
+                    return BadRequest();
+                }
+
+                if (addressId == new Guid())
+                {
+                    return BadRequest();
+                }
+
+                if (!_unitOfWork.Addresses.IsOrganizationExists(organizationId))
+                {
+                    return NotFound();
+                }
+
+                if (!_unitOfWork.Addresses.IsAddressExists(organizationId, addressId))
+                {
+                    return NotFound();
+                }
+
+                var addressFromContext = _unitOfWork.Addresses.GetAddress(organizationId, addressId);
+
+                var addressToPatch = _mapper.Map<AddressForUpdateDto>(addressFromContext);
+                jsonPatchDocument.ApplyTo(addressToPatch, ModelState);
+
+                TryValidateModel(addressToPatch);
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                _mapper.Map(addressToPatch, addressFromContext);
+
+                if (!_unitOfWork.Complete())
+                {
+                    return StatusCode(500, "A problem happened while handling your request!");
+                }
+
+                return NoContent();
+            }
     }
 }

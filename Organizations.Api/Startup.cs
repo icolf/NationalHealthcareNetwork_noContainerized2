@@ -56,6 +56,7 @@ namespace Organizations.Api
             services.AddScoped<IOrganizationsRepository, OrganizationsRepository>();
             services.AddScoped<IAddressesRepository, AddressesRepository>();
             services.AddScoped<IPhonesRepository, PhonesRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             //services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
