@@ -5,6 +5,7 @@ namespace Organizations.Api.Models.CreationDtos
     public class AddressForCreationDto
     {
         [Required(ErrorMessage = "First line for address is required")]
+
         public string Address1 { get; set; }
 
         public string Address2 { get; set; }
