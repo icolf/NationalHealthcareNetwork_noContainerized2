@@ -94,8 +94,10 @@ namespace Organizations.Api.Controllers
                 return StatusCode(500, "A problem happened while handling your request!");
             }
 
+            var phoneToReturn = _mapper.Map<PhoneDto>(mappedPhone);
+
             return CreatedAtRoute("GetPhone",
-                new { organizationId = organizationId, phoneId = mappedPhone.PhoneId }, mappedPhone);
+                new { organizationId = organizationId, phoneId = phoneToReturn.PhoneId }, phoneToReturn);
         }
 
         [HttpDelete("{organizationId}/phones/{phoneId}")]

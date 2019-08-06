@@ -5,6 +5,9 @@ using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Organizations.Api.Enums;
+using Organizations.Api.Helpers;
 using Organizations.Api.Models;
 using Organizations.Api.Models.CreationDtos;
 using Organizations.Api.Models.UpdateDtos;
@@ -12,6 +15,8 @@ using Organizations.Api.Persistence;
 using Organizations.Api.Persistence.Entities;
 using Organizations.Api.Repositories;
 using Organizations.Api.Repositories.RepositoriesInterfaces;
+using Organizations.Api.Services;
+using UnprocessableEntityObjectResult = Microsoft.AspNetCore.Mvc.UnprocessableEntityObjectResult;
 
 namespace Organizations.Api.Controllers
 {
@@ -20,20 +25,59 @@ namespace Organizations.Api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ILogger<OrganizationsController> _logger;
+        private readonly IUrlHelper _urlHelper;
+        private readonly ITypeHelperServices _typeHelperServices;
 
-        public OrganizationsController (IUnitOfWork unitOfWork, IMapper mapper)
+        public OrganizationsController (IUnitOfWork unitOfWork, IMapper mapper, ILogger<OrganizationsController> logger, IUrlHelper urlHelper, ITypeHelperServices typeHelperServices)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _logger = logger;
+            _urlHelper = urlHelper;
+            _typeHelperServices = typeHelperServices;
         }
 
-        [HttpGet()]
-        public IActionResult GetOrganizations()
+        [HttpGet(Name="GetOrganizations")]
+        public IActionResult GetOrganizations(OrganizationResourceParameters organizationResourceParameters)
         {
-            var organizations = _unitOfWork.Organizations.GetOrganizations();
 
-            return Ok(organizations);
+            var organizations = _unitOfWork.Organizations.GetOrganizations(organizationResourceParameters);
+
+            if (!_typeHelperServices.TypeHasProperties<OrganizationDto>(organizationResourceParameters.Fields))
+            {
+                return BadRequest();
+            }
+
+
+
+            //Pagination Metadata
+            var previousPageLink = organizations.HasPrevious
+                ? CreateOrganizationsResourceUri(organizationResourceParameters, ResourceUriType.PreviousPage)
+                : null;
+            var nextPageLink = organizations.HasNext
+                ? CreateOrganizationsResourceUri(organizationResourceParameters, ResourceUriType.NextPage)
+                : null;
+
+            var paginationMetadata = new
+            {
+                totalCount = organizations.TotalCount,
+                pageSize = organizations.PageSize,
+                currentPage = organizations.CurrentPage,
+                totalPages = organizations.TotalPages,
+                previousPageLink = previousPageLink,
+                nextPageLink = nextPageLink
+            };
+
+            Response.Headers.Add("X-Pagination", Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
+
+            var organizationsToReturn = _mapper.Map<IEnumerable<OrganizationWithoutChildrenDto>>(organizations);
+
+
+
+            return Ok(organizationsToReturn.ShapeData(organizationResourceParameters.Fields));
         }
+
 
         [HttpGet("{orgOnly}")]
         public IActionResult GetOrganizationsOnly(bool orgOnly)
@@ -60,46 +104,86 @@ namespace Organizations.Api.Controllers
                 return Ok(organizationToReturn);
             }
 
+            _logger.LogInformation(100, $"Organization Id= {organizationId} Name= {organization.Name} return.");
+
+
             return Ok(_mapper.Map<OrganizationWithoutChildrenDto>(organization));
         }
 
         [HttpPost()]
-        public IActionResult CreateOrganization([FromBody] OrganizationForCreationDto organizationDto)
-        {
-            if (organizationDto == null)
-            {
-                return BadRequest();
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-
-            var organizationToAdd = _unitOfWork.Organizations.CreateOrganization(organizationDto);
-
-            return CreatedAtRoute("GetOrganization", new {organizationId = organizationToAdd.OrganizationId},
-                organizationToAdd);
-
-        }
-
-        [HttpPut("{organizationId}")]
-        public IActionResult UpdateOrganization(Guid organizationId, [FromBody] OrganizationWithoutChildrenForUpdateDto organization)
+        public IActionResult CreateOrganization([FromBody] OrganizationForCreationDto organization)
         {
             if (organization == null)
             {
                 return BadRequest();
             }
 
+            if (!ModelState.IsValid)
+            {
+                return new UnprocessableEntityObjectResult(ModelState);
+            }
+
+
+            var organizationToAdd = _unitOfWork.Organizations.CreateOrganization(organization);
+
+            if (!_unitOfWork.Complete())
+            {
+                return StatusCode(500, "A problem happened while handling your request!");
+            }
+
+            var organizationToReturn = _mapper.Map<OrganizationDto>(organizationToAdd);
+
+            return CreatedAtRoute("GetOrganization", new {organizationId = organizationToReturn.OrganizationId},
+                organizationToReturn);
+
+        }
+
+
+        [HttpPut("{organizationId}")]
+        public IActionResult UpdateOrganization(Guid organizationId, [FromBody] OrganizationForUpdateDto organization)
+        {
             if (organizationId == new Guid())
             {
                 return BadRequest();
             }
 
-            if (!ModelState.IsValid)
+            if(!_unitOfWork.Organizations.IsOrganizationExists(organizationId))
             {
-                return BadRequest(ModelState);
+                return NotFound();
+            }
+
+            if (organization == null)
+            {
+                return BadRequest();
+            }
+
+            var organizationFromContext = _unitOfWork.Organizations.GetOrganization(organizationId, true);
+
+            _unitOfWork.Organizations.TrackOrganizationUpdate(organizationFromContext, organization);
+
+            _unitOfWork.Phones.UpdateAndAddPhones(organization.Phones, organizationFromContext.Phones, organizationId);
+
+            _unitOfWork.Addresses.UpdateAndAddAddresses(organization.Addresses, organizationFromContext.Addresses, organizationId);
+
+            _unitOfWork.Phones.DeletePhones(organization, organizationFromContext);
+
+            _unitOfWork.Addresses.DeleteAddresses(organization, organizationFromContext);
+
+            if (!_unitOfWork.Complete())
+            {
+                return StatusCode(500, "A problem happened while handling your request!");
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{organizationId}")]
+        public IActionResult DeleteOrganization(Guid organizationId)
+        {
+
+            if (organizationId == new Guid())
+            {
+                return BadRequest();
             }
 
             if (!_unitOfWork.Organizations.IsOrganizationExists(organizationId))
@@ -107,28 +191,16 @@ namespace Organizations.Api.Controllers
                 return NotFound();
             }
 
-            _unitOfWork.Organizations.UpdateOrganization(organization, organizationId);
-
-            return NoContent();
-
-        }
-
-        [HttpDelete("{organizationId}")]
-        public IActionResult DeleteOrganization(Guid organizationId)
-        {
-            if (organizationId == null)
-            {
-                return BadRequest();
-            }
-
             var organizationToDelete = _unitOfWork.Organizations.GetOrganization(organizationId, false);
 
-            if (organizationToDelete == null)
+            _unitOfWork.Organizations.DeleteOrganization(organizationToDelete);
+
+            if (!_unitOfWork.Complete())
             {
-                return NotFound();
+                return StatusCode(500, "A problem happened while handling your request!");
             }
 
-            _unitOfWork.Organizations.DeleteOrganization(organizationToDelete);
+            _logger.LogInformation(100, $"Organization Id= {organizationId} Name= {organizationToDelete.Name} was deleted.");
 
             return NoContent();
         }
@@ -172,9 +244,42 @@ namespace Organizations.Api.Controllers
                 return StatusCode(500, "A problem happened while handling your request!");
             }
             return NoContent();
-
-
-
         }
+
+        private string CreateOrganizationsResourceUri(OrganizationResourceParameters organizationResourceParameters,
+            ResourceUriType type)
+        {
+            switch (type)
+            {
+                case ResourceUriType.NextPage:
+                    return _urlHelper.Link("GetOrganizations", new
+                    {
+                        fields=organizationResourceParameters.Fields,
+                        orderBy=organizationResourceParameters.OrderBy,
+                        name=organizationResourceParameters.Name,
+                        currentPage = organizationResourceParameters.CurrentPage + 1,
+                        pageSize = organizationResourceParameters.PageSize
+                    });
+                case ResourceUriType.PreviousPage:
+                    return _urlHelper.Link("GetOrganizations", new
+                    {
+                        fields = organizationResourceParameters.Fields,
+                        orderBy = organizationResourceParameters.OrderBy,
+                        name = organizationResourceParameters.Name,
+                        currentPage = organizationResourceParameters.CurrentPage - 1,
+                        pageSize = organizationResourceParameters.PageSize
+                    });
+                default:
+                    return _urlHelper.Link("GetOrganizations", new
+                    {
+                        fields = organizationResourceParameters.Fields,
+                        orderBy = organizationResourceParameters.OrderBy,
+                        name = organizationResourceParameters.Name,
+                        currentPage = organizationResourceParameters.CurrentPage,
+                        pageSize = organizationResourceParameters.PageSize
+                    });
+            }
+        }
+
     }
 }

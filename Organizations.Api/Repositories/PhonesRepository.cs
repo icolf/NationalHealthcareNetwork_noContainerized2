@@ -7,6 +7,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Organizations.Api.Models;
 using Organizations.Api.Models.CreationDtos;
+using Organizations.Api.Models.UpdateDtos;
 using Organizations.Api.Persistence;
 using Organizations.Api.Persistence.Entities;
 
@@ -60,6 +61,48 @@ namespace Organizations.Api.Repositories
             var phoneToDelete = GetPhone(organizationId, phoneId);
 
             _context.Phones.Remove(phoneToDelete);
+        }
+
+        public void DeletePhones(OrganizationForUpdateDto organization, Organization organizationFromContext)
+        {
+            if (organization.DeletedPhones.Count > 0)
+            {
+                foreach (var deletedPhone in organization.DeletedPhones)
+                {
+                    foreach (var phone in organizationFromContext.Phones)
+                    {
+                        if (phone.PhoneId == deletedPhone.PhoneId)
+                        {
+                            _context.Phones.Remove(phone);
+                        }
+                    }
+                }
+            }
+
+        }
+
+        public void UpdateAndAddPhones(List<PhoneForUpdateDto> phones, List<Phone> phonesFromContext, Guid organizationId)
+        {
+            foreach (var updatedPhone in phones)
+            {
+                if (updatedPhone.PhoneId == new Guid())
+                {
+                    updatedPhone.OrganizationId = organizationId;
+                    _context.Phones.Add(_mapper.Map<PhoneForUpdateDto, Phone>(updatedPhone));
+                }
+                else
+                {
+                    foreach (var phone in phonesFromContext)
+                    {
+                        if (phone.PhoneId == updatedPhone.PhoneId)
+                        {
+                            updatedPhone.OrganizationId = organizationId;
+                            _mapper.Map<PhoneForUpdateDto, Phone>(updatedPhone, phone);
+                            _context.Phones.Update(phone);
+                        }
+                    }
+                }
+            }
         }
 
         public bool Save()

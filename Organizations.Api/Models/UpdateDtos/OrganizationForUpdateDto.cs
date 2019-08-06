@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Organizations.Api.Enums;
 
 namespace Organizations.Api.Models.UpdateDtos
 {
     public class OrganizationForUpdateDto
     {
+        public Guid OrganizationId { get; set; }
         public bool IsHospital { get; set; } = false;
 
         [Required(ErrorMessage = "A valid SS is Required")]
@@ -20,12 +22,18 @@ namespace Organizations.Api.Models.UpdateDtos
 
         public List<AddressForUpdateDto> Addresses { get; set; } = new List<AddressForUpdateDto>();
 
+        public List<AddressDto> DeletedAddresses { get; set; } = new List<AddressDto>();
+
         public List<PhoneForUpdateDto> Phones { get; set; } = new List<PhoneForUpdateDto>();
+
+        public List<PhoneDto> DeletedPhones { get; set; } = new List<PhoneDto>();
 
         [Required(ErrorMessage = "A Description is Required")]
         public string Description { get; set; }
 
         public string Url { get; set; }
+
+        public TrackedStatus Status { get; set; }
 
         public string ImagePath { get; set; }
 

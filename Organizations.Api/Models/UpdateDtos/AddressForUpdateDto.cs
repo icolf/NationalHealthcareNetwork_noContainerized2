@@ -2,11 +2,14 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
+using Organizations.Api.Enums;
 
 namespace Organizations.Api.Models.UpdateDtos
 {
     public class AddressForUpdateDto
     {
+        public Guid AddressId { get; set; }
+
         [Required(ErrorMessage = "Organization Id is required")]
         public Guid OrganizationId { get; set; }
 
@@ -38,6 +41,8 @@ namespace Organizations.Api.Models.UpdateDtos
         public string PostalCountry { get; set; }
 
         public string PostalZip { get; set; }
+
+        public TrackedStatus Status { get; set; }
 
     }
 }

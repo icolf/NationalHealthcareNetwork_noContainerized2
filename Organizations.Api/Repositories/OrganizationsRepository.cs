@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Organizations.Api.Helpers;
 using Organizations.Api.Models;
 using Organizations.Api.Models.CreationDtos;
 using Organizations.Api.Models.UpdateDtos;
 using Organizations.Api.Persistence;
 using Organizations.Api.Persistence.Entities;
 using Organizations.Api.Repositories.RepositoriesInterfaces;
+using Organizations.Api.Services;
 
 namespace Organizations.Api.Repositories
 {
@@ -18,22 +20,33 @@ namespace Organizations.Api.Repositories
     {
         private readonly OrganizationsContext _context;
         private readonly IMapper _mapper;
+        private readonly IPropertyMappingService _propertyMappingService;
 
-        public OrganizationsRepository(OrganizationsContext context, IMapper mapper)
+        public OrganizationsRepository(OrganizationsContext context, IMapper mapper, IPropertyMappingService propertyMappingService)
         {
             _context = context;
             _mapper = mapper;
+            _propertyMappingService = propertyMappingService;
         }
-        public IEnumerable<OrganizationWithoutChildrenDto> GetOrganizations()
+        public PageList<Organization> GetOrganizations(OrganizationResourceParameters organizationResourceParameters)
         {
-            var organizations = _context.Organizations.OrderBy(o=>o.Name)
-                .Include(o => o.Addresses)
-                .Include(o => o.Phones)
-                .ToList();
+            var organizationBeforePaging =
+                _context.Organizations.ApplySort(organizationResourceParameters.OrderBy, _propertyMappingService.GetPropertyMapping<OrganizationDto, Organization>());
 
-            var organizationsToReturn = _mapper.Map<IEnumerable<OrganizationWithoutChildrenDto>>(organizations);
+            if (!string.IsNullOrEmpty(organizationResourceParameters.Name))
+            {
+                var descriptionForWhereClause = organizationResourceParameters.Name.Trim().ToLowerInvariant();
+                organizationBeforePaging =
+                    organizationBeforePaging.Where(o => o.Name.ToLowerInvariant().Contains(descriptionForWhereClause));
 
-            return organizationsToReturn;
+            }
+
+            var organizations = PageList<Organization>
+                .Create(organizationBeforePaging
+                    , organizationResourceParameters.CurrentPage
+                    , organizationResourceParameters.PageSize
+                    );
+            return organizations;
         }
 
         public IEnumerable<Organization> GetOrganizationsOnly()
@@ -62,8 +75,6 @@ namespace Organizations.Api.Repositories
 
             _context.Organizations.Add(organizationToAdd);
 
-            _context.SaveChanges();
-
             return organizationToAdd;
         }
 
@@ -81,9 +92,7 @@ namespace Organizations.Api.Repositories
 
         public void DeleteOrganization(Organization organizationToDelete)
         {
-
             _context.Organizations.Remove(organizationToDelete);
-            _context.SaveChanges();
         }
 
         public bool IsOrganizationExists(Guid organizationId)
@@ -91,6 +100,17 @@ namespace Organizations.Api.Repositories
             return _context.Organizations.Any(o => o.OrganizationId == organizationId);
         }
 
+        public void TrackOrganizationUpdate(Organization organization, OrganizationForUpdateDto organizationForUpdate)
+        {
+            var organizationWithoutChildren = _mapper.Map<OrganizationWithoutChildrenDto>(organizationForUpdate);
+            _mapper.Map(organizationWithoutChildren, organization);
+            _context.Organizations.Update(organization);
+        }
+
+        public Organization Find(Guid organizationId)
+        {
+            return _context.Organizations.Find(organizationId);
+        }
 
     }
 }

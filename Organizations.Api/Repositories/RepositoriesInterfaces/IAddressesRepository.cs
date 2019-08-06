@@ -23,6 +23,11 @@ namespace Organizations.Api.Repositories.RepositoriesInterfaces
 
         void DeleteAddress(Guid organizationId, Guid addressId);
 
+        void DeleteAddresses(OrganizationForUpdateDto organization, Organization organizationFromContext);
+
+        void UpdateAndAddAddresses(List<AddressForUpdateDto> addresses, List<Address> addressesFromContext,
+            Guid organizationId);
+
         bool Save();
     }
 }

@@ -8,7 +8,7 @@ using Organizations.Api.Models;
 
 namespace Organizations.Api.Models
 {
-    public class OrganizationDto
+    public class OrganizationDto : LinkedResourceBaseDto
     {
         public Guid OrganizationId { get; set; }
 
