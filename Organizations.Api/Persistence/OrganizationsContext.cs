@@ -21,15 +21,15 @@ namespace Organizations.Api.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             
-            modelBuilder.Entity<Organizations.Api.Persistence.Entities.Organization>().HasData(
-                new Organizations.Api.Persistence.Entities.Organization()
+            modelBuilder.Entity<Organization>().HasData(
+                new Organization()
                 {
                     OrganizationId = new Guid("123e4567-e89b-12d3-a456-426655440001"),
                     Name = "Organization1",
                     Description = "Description for Organization 1",
                     Ssn="000000001"
                 },
-                new Organizations.Api.Persistence.Entities.Organization()
+                new Organization()
                 {
                     OrganizationId = new Guid("123e4567-e89b-12d3-a456-426655440002"),
                     Name = "Organization1",
@@ -92,6 +92,8 @@ namespace Organizations.Api.Persistence
                     OrganizationId = Guid.Parse("123e4567-e89b-12d3-a456-426655440002")
                 }
             );
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

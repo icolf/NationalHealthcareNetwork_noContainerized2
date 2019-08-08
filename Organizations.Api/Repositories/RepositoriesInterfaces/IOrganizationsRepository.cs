@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using Organizations.Api.Helpers;
-using Organizations.Api.Models;
 using Organizations.Api.Models.CreationDtos;
 using Organizations.Api.Models.UpdateDtos;
 using Organizations.Api.Persistence.Entities;
@@ -11,7 +10,7 @@ namespace Organizations.Api.Repositories.RepositoriesInterfaces
 {
     public interface IOrganizationsRepository
     {
-        PageList<Organization> GetOrganizations(OrganizationResourceParameters organizationResourceParameters);
+        Task<PageList<Organization>> GetOrganizations(OrganizationResourceParameters organizationResourceParameters);
 
         IEnumerable<Organization> GetOrganizationsOnly();
 

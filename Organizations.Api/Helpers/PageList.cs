@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Organizations.Api.Helpers
 {
@@ -28,10 +29,10 @@ namespace Organizations.Api.Helpers
             AddRange(items);
         }
 
-        public static PageList<T> Create(IQueryable<T> source, int currentPage, int pageSize)
+        public static async Task<PageList<T>> Create(IQueryable<T> source, int currentPage, int pageSize)
         {
-            var count = source.Count();
-            var items = source.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+            var count = await source.CountAsync();
+            var items = await source.Skip((currentPage - 1) * pageSize).Take(pageSize).ToListAsync();
             return new PageList<T>(items, currentPage, pageSize, count);
         }
     }

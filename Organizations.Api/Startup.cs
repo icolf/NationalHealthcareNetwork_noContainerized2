@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -16,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Serialization;
 using Organizations.Api.AutoMapperProfiles;
 using Organizations.Api.Models;
@@ -26,7 +22,6 @@ using Organizations.Api.Persistence;
 using Organizations.Api.Persistence.Entities;
 using Organizations.Api.Repositories;
 using Organizations.Api.Repositories.RepositoriesInterfaces;
-using NLog.Extensions.Logging;
 using Organizations.Api.Services;
 
 namespace Organizations.Api
@@ -46,6 +41,7 @@ namespace Organizations.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            ThreadPool.SetMaxThreads(Environment.ProcessorCount, Environment.ProcessorCount);
             //services.AddMvc()
             //    .AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
             //    .AddJsonOptions(options =>
@@ -58,14 +54,6 @@ namespace Organizations.Api
             //    })
             //    .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-
-            //UrlHelper configuration as Kevin Dockx
-            //services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
-            //services.AddScoped<IUrlHelper>(implementationFactory =>
-            //{
-            //    var actionContext = implementationFactory.GetService<IActionContextAccessor>().ActionContext;
-            //    return new UrlHelper(actionContext);
-            //});
 
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddScoped<IUrlHelper>(x => {

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Organizations.Api.Enums;
 using Organizations.Api.Helpers;
@@ -12,15 +11,15 @@ using Organizations.Api.Models;
 using Organizations.Api.Models.CreationDtos;
 using Organizations.Api.Models.UpdateDtos;
 using Organizations.Api.Persistence;
-using Organizations.Api.Persistence.Entities;
-using Organizations.Api.Repositories;
-using Organizations.Api.Repositories.RepositoriesInterfaces;
 using Organizations.Api.Services;
+// ReSharper disable IdentifierTypo
 using UnprocessableEntityObjectResult = Microsoft.AspNetCore.Mvc.UnprocessableEntityObjectResult;
+// ReSharper restore IdentifierTypo
 
 namespace Organizations.Api.Controllers
 {
     [Route("api/organizations")]
+
     public class OrganizationsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -39,10 +38,10 @@ namespace Organizations.Api.Controllers
         }
 
         [HttpGet(Name="GetOrganizations")]
-        public IActionResult GetOrganizations(OrganizationResourceParameters organizationResourceParameters)
+        public async Task<IActionResult> GetOrganizations(OrganizationResourceParameters organizationResourceParameters)
         {
 
-            var organizations = _unitOfWork.Organizations.GetOrganizations(organizationResourceParameters);
+            var organizations = await _unitOfWork.Organizations.GetOrganizations(organizationResourceParameters);
 
             if (!_typeHelperServices.TypeHasProperties<OrganizationDto>(organizationResourceParameters.Fields))
             {
@@ -65,8 +64,8 @@ namespace Organizations.Api.Controllers
                 pageSize = organizations.PageSize,
                 currentPage = organizations.CurrentPage,
                 totalPages = organizations.TotalPages,
-                previousPageLink = previousPageLink,
-                nextPageLink = nextPageLink
+                previousPageLink,
+                nextPageLink
             };
 
             Response.Headers.Add("X-Pagination", Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));

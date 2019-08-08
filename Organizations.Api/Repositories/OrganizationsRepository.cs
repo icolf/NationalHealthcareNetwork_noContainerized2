@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Organizations.Api.Helpers;
 using Organizations.Api.Models;
@@ -28,7 +27,7 @@ namespace Organizations.Api.Repositories
             _mapper = mapper;
             _propertyMappingService = propertyMappingService;
         }
-        public PageList<Organization> GetOrganizations(OrganizationResourceParameters organizationResourceParameters)
+        public async Task<PageList<Organization>> GetOrganizations(OrganizationResourceParameters organizationResourceParameters)
         {
             var organizationBeforePaging =
                 _context.Organizations.ApplySort(organizationResourceParameters.OrderBy, _propertyMappingService.GetPropertyMapping<OrganizationDto, Organization>());
@@ -38,10 +37,9 @@ namespace Organizations.Api.Repositories
                 var descriptionForWhereClause = organizationResourceParameters.Name.Trim().ToLowerInvariant();
                 organizationBeforePaging =
                     organizationBeforePaging.Where(o => o.Name.ToLowerInvariant().Contains(descriptionForWhereClause));
-
             }
 
-            var organizations = PageList<Organization>
+            var organizations = await PageList<Organization>
                 .Create(organizationBeforePaging
                     , organizationResourceParameters.CurrentPage
                     , organizationResourceParameters.PageSize

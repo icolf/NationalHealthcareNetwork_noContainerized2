@@ -33,7 +33,7 @@ namespace Organizations.Api.Helpers
                 var trimmedOrdeByClause = orderByClause.Trim();
 
                 var orderDescending = trimmedOrdeByClause.EndsWith(" desc");
-                var indexOfFirstSpace = trimmedOrdeByClause.IndexOf(" ");
+                var indexOfFirstSpace = trimmedOrdeByClause.IndexOf(" ", StringComparison.Ordinal);
                 var propertyName = indexOfFirstSpace == -1
                     ? trimmedOrdeByClause
                     : trimmedOrdeByClause.Remove(indexOfFirstSpace);
