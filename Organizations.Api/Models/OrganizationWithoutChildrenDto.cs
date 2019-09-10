@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Organizations.Api.Models
 {
-    public class OrganizationWithoutChildrenDto
+    public class OrganizationWithoutChildrenDto : LinkedResourceBaseDto
     {
         public Guid OrganizationId { get; set; }
 

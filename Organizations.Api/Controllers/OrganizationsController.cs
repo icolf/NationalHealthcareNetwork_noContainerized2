@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
@@ -38,10 +39,11 @@ namespace Organizations.Api.Controllers
         }
 
         [HttpGet(Name="GetOrganizations")]
-        public async Task<IActionResult> GetOrganizations(OrganizationResourceParameters organizationResourceParameters)
+        public async Task<IActionResult> GetOrganizations(OrganizationResourceParameters organizationResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
 
             var organizations = await _unitOfWork.Organizations.GetOrganizations(organizationResourceParameters);
+
 
             if (!_typeHelperServices.TypeHasProperties<OrganizationDto>(organizationResourceParameters.Fields))
             {
@@ -70,11 +72,18 @@ namespace Organizations.Api.Controllers
 
             Response.Headers.Add("X-Pagination", Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
 
-            var organizationsToReturn = _mapper.Map<IEnumerable<OrganizationWithoutChildrenDto>>(organizations);
+            var organizationsToReturn = _mapper.Map<IEnumerable<OrganizationDto>>(organizations);
 
 
+            organizationsToReturn = organizationsToReturn.Select(o =>
+            {
+                o = CreateLinksForOrganization(o);
+                return o;
+            });
 
-            return Ok(organizationsToReturn.ShapeData(organizationResourceParameters.Fields));
+            var organizationsToReturnWithoutChildren = _mapper.Map<IEnumerable<OrganizationWithoutChildrenDto>>(organizationsToReturn);
+
+            return Ok(organizationsToReturnWithoutChildren.ShapeData(organizationResourceParameters.Fields));
         }
 
 
@@ -96,20 +105,22 @@ namespace Organizations.Api.Controllers
                 return NotFound();
             }
 
+            var organizationToReturn = _mapper.Map<OrganizationDto>(organization);
+            organizationToReturn = CreateLinksForOrganization(organizationToReturn);
+
             if (includeChildren)
             {
-                var organizationToReturn = _mapper.Map<OrganizationDto>(organization);
 
                 return Ok(organizationToReturn);
             }
 
             _logger.LogInformation(100, $"Organization Id= {organizationId} Name= {organization.Name} return.");
 
-
-            return Ok(_mapper.Map<OrganizationWithoutChildrenDto>(organization));
+            var organizationWithoutChildren = _mapper.Map<OrganizationWithoutChildrenDto>(organizationToReturn);
+            return Ok(_mapper.Map<OrganizationWithoutChildrenDto>(organizationWithoutChildren));
         }
 
-        [HttpPost()]
+        [HttpPost(Name = "CreateOrganization")]
         public IActionResult CreateOrganization([FromBody] OrganizationForCreationDto organization)
         {
             if (organization == null)
@@ -130,7 +141,7 @@ namespace Organizations.Api.Controllers
                 return StatusCode(500, "A problem happened while handling your request!");
             }
 
-            var organizationToReturn = _mapper.Map<OrganizationDto>(organizationToAdd);
+            var organizationToReturn = CreateLinksForOrganization(_mapper.Map<OrganizationDto>(organizationToAdd));
 
             return CreatedAtRoute("GetOrganization", new {organizationId = organizationToReturn.OrganizationId},
                 organizationToReturn);
@@ -138,7 +149,7 @@ namespace Organizations.Api.Controllers
         }
 
 
-        [HttpPut("{organizationId}")]
+        [HttpPut("{organizationId}", Name="UpdateOrganization")]
         public IActionResult UpdateOrganization(Guid organizationId, [FromBody] OrganizationForUpdateDto organization)
         {
             if (organizationId == new Guid())
@@ -176,7 +187,7 @@ namespace Organizations.Api.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{organizationId}")]
+        [HttpDelete("{organizationId}", Name = "DeleteOrganization")]
         public IActionResult DeleteOrganization(Guid organizationId)
         {
 
@@ -204,7 +215,7 @@ namespace Organizations.Api.Controllers
             return NoContent();
         }
 
-        [HttpPatch("{organizationId}")]
+        [HttpPatch("{organizationId}", Name = "PartiallyUpdateOrganization")]
         public IActionResult UpdateOrganization(Guid organizationId,
             [FromBody] JsonPatchDocument<OrganizationForUpdateDto> patchDoc)
         {
@@ -278,6 +289,27 @@ namespace Organizations.Api.Controllers
                         pageSize = organizationResourceParameters.PageSize
                     });
             }
+        }
+
+        private OrganizationDto CreateLinksForOrganization(OrganizationDto organization)
+        {
+            organization.Links.Add(
+                new LinkDto(_urlHelper.Link("GetOrganization", new {organization.OrganizationId}),
+                "self",
+               "Get"));
+            organization.Links.Add(
+                new LinkDto(_urlHelper.Link("UpdateOrganization", new {organization.OrganizationId}),
+                "update_organization",
+               "Put"));
+            organization.Links.Add(
+                new LinkDto(_urlHelper.Link("DeleteOrganization", new {organization.OrganizationId}),
+                "delete_organization",
+               "Delete"));
+            organization.Links.Add(
+                new LinkDto(_urlHelper.Link("PartiallyUpdateOrganization", new {organization.OrganizationId}),
+                "update_organization",
+               "Patch"));
+            return organization;
         }
 
     }
