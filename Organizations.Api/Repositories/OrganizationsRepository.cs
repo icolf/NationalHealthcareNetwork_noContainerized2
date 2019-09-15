@@ -27,6 +27,8 @@ namespace Organizations.Api.Repositories
             _mapper = mapper;
             _propertyMappingService = propertyMappingService;
         }
+
+
         public async Task<PageList<Organization>> GetOrganizations(OrganizationResourceParameters organizationResourceParameters)
         {
             var organizationBeforePaging =

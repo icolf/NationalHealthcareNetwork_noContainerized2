@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using AutoMapper;
 using Microsoft.AspNetCore.Builder;
@@ -6,6 +8,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -13,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
 using Organizations.Api.AutoMapperProfiles;
 using Organizations.Api.Models;
@@ -64,10 +68,13 @@ namespace Organizations.Api
 
 
             services.AddMvc(setupAction =>
-            {
-                setupAction.ReturnHttpNotAcceptable = true;
-                setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
-            })
+                {
+                    setupAction.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status400BadRequest));
+                    setupAction.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status406NotAcceptable));
+                    setupAction.Filters.Add(new ProducesResponseTypeAttribute(StatusCodes.Status500InternalServerError));
+                    setupAction.ReturnHttpNotAcceptable = true;
+                    setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+                })
                 .AddJsonOptions(jo =>
                 {
                     jo.SerializerSettings.ContractResolver=new CamelCasePropertyNamesContractResolver();
@@ -77,6 +84,25 @@ namespace Organizations.Api
 
             var organizationsDbConnectionString = Configuration["connectionStrings:organizationsDbConnectionString"];
             services.AddDbContext<OrganizationsContext>(o => o.UseSqlServer(organizationsDbConnectionString));
+
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = actionContext =>
+                {
+                    var actionExecutingContext = actionContext as ActionExecutingContext;
+                    //if there are modelstate errors & and all key values are correctly
+                    //found/parsed we're dealing with validation errors
+                    if (actionContext.ModelState.ErrorCount > 0 &&
+                        actionExecutingContext?.ActionArguments.Count ==
+                        actionContext.ActionDescriptor.Parameters.Count)
+                    {
+                        return new UnprocessableEntityObjectResult(actionContext.ModelState);
+                    }
+
+                    return new BadRequestObjectResult(actionContext.ModelState);
+                };
+            });
+
 
             services.AddScoped<IOrganizationsRepository, OrganizationsRepository>();
             services.AddScoped<IAddressesRepository, AddressesRepository>();
@@ -106,13 +132,34 @@ namespace Organizations.Api
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
 
+            services.AddSwaggerGen(setupAction=>
+            {
+                setupAction.SwaggerDoc("NationalHealthSpecification", new OpenApiInfo()
+                {
+                    Title="NationalHealthCareNetwork",
+                    Version="1",
+                    Description= "API as a sample for demonstrating my skills in ASP .Net Core",
+                    Contact=new OpenApiContact
+                    {
+                        Email="icolfigueroa@gmail.com",
+                        Name="Luis E. Figueroa",
+                        Url= new Uri("https://www.linkedin.com/in/luis-e-figueroa-9a99a093/")
+                    }
+                });
+
+                var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
+                setupAction.IncludeXmlComments(xmlCommentsFullPath);
+            });
+
+
             services.AddHttpCacheHeaders(expirationModelOptions =>
             {
                 expirationModelOptions.MaxAge = 6;
             });
 
             services.AddResponseCaching();
-        }
+        } 
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -145,7 +192,15 @@ namespace Organizations.Api
 
             app.UseResponseCaching();
             app.UseHttpCacheHeaders();
-
+            app.UseSwagger();
+            app.UseSwaggerUI(setupAction =>
+            {
+                setupAction.SwaggerEndpoint(
+                    "/swagger/NationalHealthSpecification/swagger.json", 
+                    "NationalHealthCareNetwork");
+                setupAction.RoutePrefix = "";
+            });
+            
             app.UseMvc();
         }
     }

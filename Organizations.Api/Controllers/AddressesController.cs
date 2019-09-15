@@ -1,19 +1,13 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Organizations.Api.Models;
 using Organizations.Api.Models.CreationDtos;
 using Organizations.Api.Models.UpdateDtos;
 using Organizations.Api.Persistence;
-using Organizations.Api.Persistence.Entities;
-using Organizations.Api.Repositories;
-using Organizations.Api.Repositories.RepositoriesInterfaces;
 
 namespace Organizations.Api.Controllers
 {
@@ -52,6 +46,9 @@ namespace Organizations.Api.Controllers
             return Ok(CreateLinksForAddresses(wrapper));
         }
 
+
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type=typeof(AddressDto))]
         [HttpGet("{organizationId}/addresses/{addressId}", Name ="GetAddressForOrganization")]
         public IActionResult GetAddress(Guid organizationId, Guid addressId)
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,6 @@ using UnprocessableEntityObjectResult = Microsoft.AspNetCore.Mvc.UnprocessableEn
 namespace Organizations.Api.Controllers
 {
     [Route("api/organizations")]
-
     public class OrganizationsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -38,6 +38,14 @@ namespace Organizations.Api.Controllers
             _typeHelperServices = typeHelperServices;
         }
 
+
+        /// <summary>
+        /// Gets all Organizations with Pagination Meta-Data and HATEOAS Links
+        /// </summary>
+        /// <param name="organizationResourceParameters">Type that contains parameter for X-pagination header</param>
+        /// <param name="mediaType">Use to set the  Http Accept Header to "Application/Json" or "application/json-NHN+json" that is used for HATEOAS links</param>
+        /// <returns>List of organizations</returns>
+        [ProducesResponseType(StatusCodes.Status200OK, Type=typeof(IEnumerable<OrganizationDto>))]
         [HttpGet(Name="GetOrganizations")]
         public async Task<IActionResult> GetOrganizations(OrganizationResourceParameters organizationResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
@@ -87,13 +95,15 @@ namespace Organizations.Api.Controllers
         }
 
 
-        [HttpGet("{orgOnly}")]
-        public IActionResult GetOrganizationsOnly(bool orgOnly)
-        {
-            var organizations = _unitOfWork.Organizations.GetOrganizationsOnly();
-            return Ok(organizations);
-        }
 
+        /// <summary>
+        /// Get an organization by its Id
+        /// </summary>
+        /// <param name="organizationId">The Id of the organization you want to get</param>
+        /// <param name="includeChildren">If true the result will include all children (phones and addresses</param>
+        /// <returns>An ActionResult of type Organization</returns>
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OrganizationDto))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{organizationId}", Name ="GetOrganization")]
         public IActionResult GetOrganization(Guid? organizationId, bool includeChildren=false)
         {
@@ -120,6 +130,13 @@ namespace Organizations.Api.Controllers
             return Ok(_mapper.Map<OrganizationWithoutChildrenDto>(organizationWithoutChildren));
         }
 
+
+        /// <summary>
+        /// Creates a new Organization
+        /// </summary>
+        /// <param name="organization">OrganizationForCreationDto</param>
+        /// <returns>OrganizationForCreationDto</returns>
+        [ProducesResponseType(StatusCodes.Status201Created)]
         [HttpPost(Name = "CreateOrganization")]
         public IActionResult CreateOrganization([FromBody] OrganizationForCreationDto organization)
         {
@@ -148,7 +165,14 @@ namespace Organizations.Api.Controllers
 
         }
 
-
+        /// <summary>
+        /// Update an Organization
+        /// </summary>
+        /// <param name="organizationId">Id for the Organization</param>
+        /// <param name="organization">OrganizationForUpdateDto</param>
+        /// <returns></returns>
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [HttpPut("{organizationId}", Name="UpdateOrganization")]
         public IActionResult UpdateOrganization(Guid organizationId, [FromBody] OrganizationForUpdateDto organization)
         {
@@ -187,6 +211,15 @@ namespace Organizations.Api.Controllers
             return NoContent();
         }
 
+
+        /// <summary>
+        /// Delete an Organization using its Id
+        /// </summary>
+        /// <param name="organizationId">The Id of the organization to be deleted</param>
+        /// <returns></returns>
+
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [HttpDelete("{organizationId}", Name = "DeleteOrganization")]
         public IActionResult DeleteOrganization(Guid organizationId)
         {
@@ -214,7 +247,25 @@ namespace Organizations.Api.Controllers
 
             return NoContent();
         }
-
+        /// <summary>
+        /// Partially update an Organization
+        /// </summary>
+        /// <param name="organizationId">Id of the Organization</param>
+        /// <param name="patchDoc">The set of operations to apply to an Organization</param>
+        /// <returns>Http result</returns>
+        /// <remarks>
+        /// Sample request (this request updates the organization name)\
+        /// PATCH /organizations/organizationId\
+        /// [\
+        ///     {\
+        ///         "op": "replace"\
+        ///         "path": "/name"\
+        ///         "value": "The best organization"\
+        ///     }\
+        /// ] \
+        /// </remarks>
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [HttpPatch("{organizationId}", Name = "PartiallyUpdateOrganization")]
         public IActionResult UpdateOrganization(Guid organizationId,
             [FromBody] JsonPatchDocument<OrganizationForUpdateDto> patchDoc)
