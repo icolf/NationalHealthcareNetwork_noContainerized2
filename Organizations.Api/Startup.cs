@@ -132,6 +132,8 @@ namespace Organizations.Api
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
 
+
+            //Adding swagger configuration
             services.AddSwaggerGen(setupAction=>
             {
                 setupAction.SwaggerDoc("NationalHealthSpecification", new OpenApiInfo()
