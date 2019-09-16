@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Organizations.Api</name>
+    </assembly>
+    <members>
+        <member name="M:Organizations.Api.Controllers.OrganizationsController.GetOrganizations(Organizations.Api.Helpers.OrganizationResourceParameters,System.String)">
+            <summary>
+            Gets all Organizations with Pagination Meta-Data and HATEOAS Links
+            </summary>
+            <param name="organizationResourceParameters">Type that contains parameter for X-pagination header</param>
+            <param name="mediaType">Use to set the  Http Accept Header to "Application/Json" or "application/json-NHN+json" that is used for HATEOAS links</param>
+            <returns>List of organizations</returns>
+        </member>
+        <member name="M:Organizations.Api.Controllers.OrganizationsController.GetOrganization(System.Nullable{System.Guid},System.Boolean)">
+            <summary>
+            Get an organization by its Id
+            </summary>
+            <param name="organizationId">The Id of the organization you want to get</param>
+            <param name="includeChildren">If true the result will include all children (phones and addresses</param>
+            <returns>An ActionResult of type Organization</returns>
+        </member>
+        <member name="M:Organizations.Api.Controllers.OrganizationsController.CreateOrganization(Organizations.Api.Models.CreationDtos.OrganizationForCreationDto)">
+            <summary>
+            Creates a new Organization
+            </summary>
+            <param name="organization">OrganizationForCreationDto</param>
+            <returns>OrganizationForCreationDto</returns>
+        </member>
+        <member name="M:Organizations.Api.Controllers.OrganizationsController.UpdateOrganization(System.Guid,Organizations.Api.Models.UpdateDtos.OrganizationForUpdateDto)">
+            <summary>
+            Update an Organization
+            </summary>
+            <param name="organizationId">Id for the Organization</param>
+            <param name="organization">OrganizationForUpdateDto</param>
+            <returns></returns>
+        </member>
+        <member name="M:Organizations.Api.Controllers.OrganizationsController.DeleteOrganization(System.Guid)">
+            <summary>
+            Delete an Organization using its Id
+            </summary>
+            <param name="organizationId">The Id of the organization to be deleted</param>
+            <returns></returns>
+        </member>
+        <member name="M:Organizations.Api.Controllers.OrganizationsController.UpdateOrganization(System.Guid,Microsoft.AspNetCore.JsonPatch.JsonPatchDocument{Organizations.Api.Models.UpdateDtos.OrganizationForUpdateDto})">
+            <summary>
+            Partially update an Organization
+            </summary>
+            <param name="organizationId">Id of the Organization</param>
+            <param name="patchDoc">The set of operations to apply to an Organization</param>
+            <returns>Http result</returns>
+            <remarks>
+            Sample request (this request updates the organization name)\
+            PATCH /organizations/organizationId\
+            [\
+                {\
+                    "op": "replace"\
+                    "path": "/name"\
+                    "value": "The best organization"\
+                }\
+            ] \
+            </remarks>
+        </member>
+        <member name="P:Organizations.Api.Helpers.OrganizationResourceParameters.PageSize">
+            <summary>
+            Rows in a page
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Helpers.OrganizationResourceParameters.CurrentPage">
+            <summary>
+            Actual Page
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Helpers.OrganizationResourceParameters.Name">
+            <summary>
+            Default field to Order By
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Helpers.OrganizationResourceParameters.OrderBy">
+            <summary>
+            Default field to apply Order By
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Helpers.OrganizationResourceParameters.Fields">
+            <summary>
+            CSV of fields included in Order By command
+            </summary>
+        </member>
+        <member name="T:Organizations.Api.Models.LinkDto">
+            <summary>
+            Dto for HATEOAS
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.LinkDto.Href">
+            <summary>
+            Uri for a HATEOAS Link
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.LinkDto.Rel">
+            <summary>
+            Relation with object
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.LinkDto.Method">
+            <summary>
+            Http command type
+            </summary>
+        </member>
+        <member name="M:Organizations.Api.Models.LinkDto.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="href"></param>
+            <param name="rel"></param>
+            <param name="method"></param>
+        </member>
+        <member name="T:Organizations.Api.Models.LinkedResourceBaseDto">
+            <summary>
+            Base class for producing HATEOAS Links
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.LinkedResourceBaseDto.Links">
+            <summary>
+            Collection of HATEOAS Links
+            </summary>
+        </member>
+        <member name="T:Organizations.Api.Models.OrganizationDto">
+            <summary>
+            An organization with multiple properties, phones, and addresses
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.OrganizationId">
+            <summary>
+            Id for the organization
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.IsHospital">
+            <summary>
+            Is the organization a hospital?
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.Ssn">
+            <summary>
+            Tax identification number
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.Name">
+            <summary>
+            Name for the organization
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.Email">
+            <summary>
+            Official email for the organization
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.Addresses">
+            <summary>
+            Collection of valid addresses for the organization 
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.Phones">
+            <summary>
+            Collection of valid phones for the organization 
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.Description">
+            <summary>
+            Description
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.Url">
+            <summary>
+            Page URL for the organization
+            </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.ImagePath">
+             <summary>
+            Uri of a picture of the organization 
+             </summary>
+        </member>
+        <member name="P:Organizations.Api.Models.OrganizationDto.ActiveAddressId">
+            <summary>
+            Address that is active
+            </summary>
+        </member>
+    </members>
+</doc>

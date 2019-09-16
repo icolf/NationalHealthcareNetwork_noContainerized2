@@ -58,7 +58,7 @@ namespace Organizations.Api.Repositories
                 _context.Organizations.FirstOrDefault(o => o.OrganizationId == organizationId);
             var mappedAddress = _mapper.Map<Address>(address);
 
-            organizationFromContext.Addresses.Add(_mapper.Map<Address>(mappedAddress));
+            organizationFromContext.Addresses.Add(mappedAddress);
 
             return mappedAddress;
         }
@@ -69,6 +69,48 @@ namespace Organizations.Api.Repositories
 
             _context.Addresses.Remove(addressToDelete);
         }
+
+        public void DeleteAddresses(OrganizationForUpdateDto organization, Organization organizationFromContext)
+        {
+            if (organization.DeletedAddresses.Count > 0)
+            {
+                foreach (var deletedAddress in organization.DeletedAddresses)
+                {
+                    foreach (var address in organizationFromContext.Addresses)
+                    {
+                        if (address.AddressId == deletedAddress.AddressId)
+                        {
+                            _context.Addresses.Remove(address);
+                        }
+                    }
+                }
+            }
+        }
+        public void UpdateAndAddAddresses(List<AddressForUpdateDto> addresses, List<Address> addressesFromContext, Guid organizationId)
+        {
+            foreach (var updatedAddress in addresses)
+            {
+                if (updatedAddress.AddressId == new Guid())
+                {
+                    updatedAddress.OrganizationId = organizationId;
+                    _context.Addresses.Add(_mapper.Map<AddressForUpdateDto, Address>(updatedAddress));
+                }
+                else
+                {
+                    foreach (var address in addressesFromContext)
+                    {
+                        if (address.AddressId == updatedAddress.AddressId)
+                        {
+                            updatedAddress.OrganizationId = organizationId;
+                            _mapper.Map<AddressForUpdateDto, Address>(updatedAddress, address);
+                            _context.Addresses.Update(address);
+                        }
+                    }
+                }
+            }
+
+        }
+
 
         public bool Save()
         {

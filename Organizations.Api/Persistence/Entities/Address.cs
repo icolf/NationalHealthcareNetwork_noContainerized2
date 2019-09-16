@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Organizations.Api.Enums;
 
 namespace Organizations.Api.Persistence.Entities
 {
@@ -59,6 +60,9 @@ namespace Organizations.Api.Persistence.Entities
         [Required]
         [MaxLength(250)]
         public string PostalZip { get; set; }
+
+        [NotMapped]
+        public TrackedStatus Status { get; set; }
 
     }
 }

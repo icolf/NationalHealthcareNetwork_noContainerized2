@@ -22,7 +22,9 @@ namespace Organizations.Api.AutoMapperProfiles
             CreateMap<OrganizationForCreationDto, Organization>();
             CreateMap<OrganizationForUpdateDto, Organization>();
             CreateMap<OrganizationWithoutChildrenDto, Organization>();
+            CreateMap<OrganizationForUpdateDto, OrganizationWithoutChildrenDto>();
             CreateMap<OrganizationWithoutChildrenForUpdateDto, Organization>();
+            CreateMap<OrganizationDto, OrganizationWithoutChildrenDto>().ReverseMap();
             
             CreateMap<Address, AddressDto>();
             CreateMap<Phone, PhoneDto>();

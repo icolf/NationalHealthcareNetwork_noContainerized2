@@ -1,10 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Organizations.Api.Enums;
 
 namespace Organizations.Api.Models.UpdateDtos
 {
     public class PhoneForUpdateDto
     {
+        public Guid PhoneId { get; set; }
+
         [Required(ErrorMessage = "Phone number is required")]
         [Phone(ErrorMessage = "Invalid phone number")]
         public string PhoneNumber { get; set; }
@@ -17,5 +20,7 @@ namespace Organizations.Api.Models.UpdateDtos
 
         [Required(ErrorMessage = "Organization Id is required")]
         public Guid OrganizationId { get; set; }
+
+        public TrackedStatus Status { get; set; }
     }
 }

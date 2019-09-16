@@ -1,10 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Organizations.Api.Models.CreationDtos
 {
     public class AddressForCreationDto
     {
         [Required(ErrorMessage = "First line for address is required")]
+
         public string Address1 { get; set; }
 
         public string Address2 { get; set; }
@@ -33,5 +36,6 @@ namespace Organizations.Api.Models.CreationDtos
 
         [Required(ErrorMessage = "Please enter a value for Zip Code")]
         public string PostalZip { get; set; }
+
     }
 }

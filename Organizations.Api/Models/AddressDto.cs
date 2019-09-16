@@ -1,8 +1,9 @@
 ﻿using System;
+using Organizations.Api.Enums;
 
-namespace Organizations.Api.Models
+namespace Organizations.Api.Models 
 {
-    public class AddressDto
+    public class AddressDto : LinkedResourceBaseDto
     {
         public Guid AddressId { get; set; }
 
@@ -31,6 +32,8 @@ namespace Organizations.Api.Models
         public string PostalCountry { get; set; }
 
         public string PostalZip { get; set; }
+
+        public TrackedStatus Status { get; set; }
 
     }
 }

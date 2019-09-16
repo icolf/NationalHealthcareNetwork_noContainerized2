@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Organizations.Api.Models;
 using Organizations.Api.Models.CreationDtos;
+using Organizations.Api.Models.UpdateDtos;
 using Organizations.Api.Persistence.Entities;
 
 namespace Organizations.Api.Repositories.RepositoriesInterfaces
@@ -19,6 +20,12 @@ namespace Organizations.Api.Repositories.RepositoriesInterfaces
         Phone CreatePhone(Guid organizationId, [FromBody] PhoneForCreationDto phone);
 
         void DeletePhone(Guid organizationId, Guid phoneId);
+
+        void DeletePhones(OrganizationForUpdateDto organization, Organization organizationFromContext);
+
+        void UpdateAndAddPhones(List<PhoneForUpdateDto> phones, List<Phone> phonesFromContext,
+            Guid organizationId);
+
 
         bool Save();
     }
