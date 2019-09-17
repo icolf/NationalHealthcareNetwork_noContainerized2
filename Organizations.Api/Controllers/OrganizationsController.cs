@@ -49,7 +49,7 @@ namespace Organizations.Api.Controllers
         [HttpGet(Name="GetOrganizations")]
         public async Task<IActionResult> GetOrganizations(OrganizationResourceParameters organizationResourceParameters, [FromHeader(Name = "Accept")] string mediaType)
         {
-
+            //Adding a comment in dev branch to trigger a CI after making a PR to master branch
             var organizations = await _unitOfWork.Organizations.GetOrganizations(organizationResourceParameters);
 
 
