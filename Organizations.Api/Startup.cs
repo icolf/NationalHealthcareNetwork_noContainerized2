@@ -182,8 +182,8 @@ namespace Organizations.Api
                         {
                             _logger.LogError(500, exceptionHandlerFeature.Error, exceptionHandlerFeature.Error.Message);
                         }
-                        //context.Response.StatusCode = 500;
-                        //await context.Response.WriteAsync("An unexpected fault happened.  Try again later!");
+                        context.Response.StatusCode = 500;
+                        await context.Response.WriteAsync("An unexpected fault happened.  Try again later!");
                     });
                 });
                 app.UseHsts();
