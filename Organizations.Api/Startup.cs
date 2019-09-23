@@ -134,25 +134,25 @@ namespace Organizations.Api
 
 
             //Adding swagger configuration
-            //services.AddSwaggerGen(setupAction=>
-            //{
-            //    setupAction.SwaggerDoc("NationalHealthSpecification", new OpenApiInfo()
-            //    {
-            //        Title="NationalHealthCareNetwork",
-            //        Version="1",
-            //        Description= "API as a sample for demonstrating my skills in ASP .Net Core",
-            //        Contact=new OpenApiContact
-            //        {
-            //            Email="icolfigueroa@gmail.com",
-            //            Name="Luis E. Figueroa",
-            //            Url= new Uri("https://www.linkedin.com/in/luis-e-figueroa-9a99a093/")
-            //        }
-            //    });
+            services.AddSwaggerGen(setupAction =>
+            {
+                setupAction.SwaggerDoc("NationalHealthSpecification", new OpenApiInfo()
+                {
+                    Title = "NationalHealthCareNetwork",
+                    Version = "1",
+                    Description = "API as a sample for demonstrating my skills in ASP .Net Core",
+                    Contact = new OpenApiContact
+                    {
+                        Email = "icolfigueroa@gmail.com",
+                        Name = "Luis E. Figueroa",
+                        Url = new Uri("https://www.linkedin.com/in/luis-e-figueroa-9a99a093/")
+                    }
+                });
 
-            //    var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            //    var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
-            //    setupAction.IncludeXmlComments(xmlCommentsFullPath);
-            //});
+                var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
+                setupAction.IncludeXmlComments(xmlCommentsFullPath);
+            });
 
 
             services.AddHttpCacheHeaders(expirationModelOptions =>
