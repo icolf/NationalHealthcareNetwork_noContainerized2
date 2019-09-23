@@ -134,25 +134,25 @@ namespace Organizations.Api
 
 
             //Adding swagger configuration
-            services.AddSwaggerGen(setupAction=>
-            {
-                setupAction.SwaggerDoc("NationalHealthSpecification", new OpenApiInfo()
-                {
-                    Title="NationalHealthCareNetwork",
-                    Version="1",
-                    Description= "API as a sample for demonstrating my skills in ASP .Net Core",
-                    Contact=new OpenApiContact
-                    {
-                        Email="icolfigueroa@gmail.com",
-                        Name="Luis E. Figueroa",
-                        Url= new Uri("https://www.linkedin.com/in/luis-e-figueroa-9a99a093/")
-                    }
-                });
+            //services.AddSwaggerGen(setupAction=>
+            //{
+            //    setupAction.SwaggerDoc("NationalHealthSpecification", new OpenApiInfo()
+            //    {
+            //        Title="NationalHealthCareNetwork",
+            //        Version="1",
+            //        Description= "API as a sample for demonstrating my skills in ASP .Net Core",
+            //        Contact=new OpenApiContact
+            //        {
+            //            Email="icolfigueroa@gmail.com",
+            //            Name="Luis E. Figueroa",
+            //            Url= new Uri("https://www.linkedin.com/in/luis-e-figueroa-9a99a093/")
+            //        }
+            //    });
 
-                var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
-                setupAction.IncludeXmlComments(xmlCommentsFullPath);
-            });
+            //    var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            //    var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
+            //    setupAction.IncludeXmlComments(xmlCommentsFullPath);
+            //});
 
 
             services.AddHttpCacheHeaders(expirationModelOptions =>
@@ -167,28 +167,28 @@ namespace Organizations.Api
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
 
-            //if (env.IsDevelopment())
-            //{
-            //    app.UseDeveloperExceptionPage();
-            //}
-            //else
-            //{
-            //    app.UseExceptionHandler(appBuilder =>
-            //    {
-            //        appBuilder.Run(async context =>
-            //        {
-            //            var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
-            //            if (exceptionHandlerFeature != null)
-            //            {
-            //                _logger.LogError(500, exceptionHandlerFeature.Error, exceptionHandlerFeature.Error.Message);
-            //            }
-            //            context.Response.StatusCode = 500;
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler(appBuilder =>
+                {
+                    appBuilder.Run(async context =>
+                    {
+                        var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
+                        if (exceptionHandlerFeature != null)
+                        {
+                            _logger.LogError(500, exceptionHandlerFeature.Error, exceptionHandlerFeature.Error.Message);
+                        }
+                        context.Response.StatusCode = 500;
 
-            //            await context.Response.WriteAsync("An unexpected fault happened.  Try again later, por favor!");
-            //        });
-            //    });
-            //    app.UseHsts();
-            //}
+                        await context.Response.WriteAsync("An unexpected fault happened.  Try again later, por favor!");
+                    });
+                });
+                app.UseHsts();
+            }
 
             app.UseHttpsRedirection();
             app.UseStatusCodePages();
