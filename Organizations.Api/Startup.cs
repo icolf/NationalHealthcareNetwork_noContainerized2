@@ -175,17 +175,17 @@ namespace Organizations.Api
             {
                 app.UseExceptionHandler(appBuilder =>
                 {
-                    appBuilder.Run(async context =>
-                    {
-                        var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
-                        if (exceptionHandlerFeature != null)
-                        {
-                            _logger.LogError(500, exceptionHandlerFeature.Error, exceptionHandlerFeature.Error.Message);
-                        }
-                        context.Response.StatusCode = 500;
+                    //appBuilder.Run(async context =>
+                    //{
+                        //var exceptionHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
+                        //if (exceptionHandlerFeature != null)
+                        //{
+                        //    _logger.LogError(500, exceptionHandlerFeature.Error, exceptionHandlerFeature.Error.Message);
+                        //}
+                        //context.Response.StatusCode = 500;
 
-                        await context.Response.WriteAsync("An unexpected fault happened.  Try again later, por favor!");
-                    });
+                        //await context.Response.WriteAsync("An unexpected fault happened.  Try again later, por favor!");
+                    //});
                 });
                 app.UseHsts();
             }
