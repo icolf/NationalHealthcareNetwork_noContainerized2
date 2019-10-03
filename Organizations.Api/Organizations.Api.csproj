@@ -9,6 +9,10 @@
     <NoWarn>1701;1702;1591</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>C:\Users\icolf\source\repos\NationalHealthcareNetwork_noContainerized2\Organizations.Api\Organizations.Api.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Remove="nlog.config" />
   </ItemGroup>
