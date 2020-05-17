@@ -11,7 +11,7 @@ namespace Organizations.Api.Models.CreationDtos
         [Required(ErrorMessage = "Social Security number is required")]
         public string Ssn { get; set; }
 
-        [Required(ErrorMessage = "Address missing it is required")]
+        [Required(ErrorMessage = "Name for the organization is missing")]
         public string Name { get; set; }
 
         [EmailAddress(ErrorMessage = "Bad Email format")]

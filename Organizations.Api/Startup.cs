@@ -1,10 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +22,10 @@ using Organizations.Api.Persistence.Entities;
 using Organizations.Api.Repositories;
 using Organizations.Api.Repositories.RepositoriesInterfaces;
 using Organizations.Api.Services;
+using System;
+using System.IO;
+using System.Reflection;
+using System.Threading;
 
 namespace Organizations.Api
 {
@@ -65,7 +64,6 @@ namespace Organizations.Api
                 var factory = x.GetRequiredService<IUrlHelperFactory>();
                 return factory.GetUrlHelper(actionContext);
             });
-
 
             services.AddMvc(setupAction =>
                 {
@@ -158,6 +156,7 @@ namespace Organizations.Api
             services.AddHttpCacheHeaders(expirationModelOptions =>
             {
                 expirationModelOptions.MaxAge = 6;
+
             });
 
             services.AddResponseCaching();
