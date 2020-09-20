@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Organizations.Api.Persistence.Entities;
+using System;
 
 namespace Organizations.Api.Persistence
 {
@@ -11,7 +8,7 @@ namespace Organizations.Api.Persistence
     {
         public OrganizationsContext(DbContextOptions options) : base(options)
         {
-            Database.Migrate();
+            //Database.Migrate();
         }
 
         public DbSet<Organizations.Api.Persistence.Entities.Organization> Organizations { get; set; }
@@ -32,7 +29,7 @@ namespace Organizations.Api.Persistence
                 new Organization()
                 {
                     OrganizationId = new Guid("123e4567-e89b-12d3-a456-426655440002"),
-                    Name = "Organization1",
+                    Name = "Organization2",
                     Description = "Description for Organization 2",
                     Ssn = "000000002"
                 }
