@@ -26,6 +26,8 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using Organizations.Api.SmsServices.SmsServices;
+using Twilio;
 
 namespace Organizations.Api
 {
@@ -102,6 +104,7 @@ namespace Organizations.Api
             });
 
 
+            services.AddTransient<ISmsService, SmsService>();
             services.AddScoped<IOrganizationsRepository, OrganizationsRepository>();
             services.AddScoped<IAddressesRepository, AddressesRepository>();
             services.AddScoped<IPhonesRepository, PhonesRepository>();
@@ -126,6 +129,8 @@ namespace Organizations.Api
                 cfg.CreateMap<Phone, PhoneForUpdateDto>();
 
             });
+
+            ConfigureTwilio();
 
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
@@ -160,7 +165,20 @@ namespace Organizations.Api
             });
 
             services.AddResponseCaching();
-        } 
+        }
+
+        private void ConfigureTwilio()
+        {
+            var twilioAccountSID = Configuration["Twilio:AccountSID"];
+            var twilioAuthToken = Configuration["Twilio:AuthToken"];
+
+            if (!String.IsNullOrEmpty(twilioAccountSID) && !String.IsNullOrEmpty(twilioAuthToken))
+            {
+                TwilioClient.Init(twilioAccountSID, twilioAuthToken);
+            }
+        }
+
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
